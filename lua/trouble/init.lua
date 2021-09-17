@@ -74,19 +74,22 @@ function Trouble.open(...)
     local buf = vim.api.nvim_win_get_buf(win)
 
     providers.get(win, buf, function(items)
-      -- print(vim.inspect(items))
+      if items == nil then
+        util.error("lsp sent nill results")
+        return
+      end
+
       if #items == 0 then
         util.warn("no results")
         return
       end
 
       if opts.mode == 'lsp_definitions' and #items == 1 then
-        --print(vim.inspect(items))
         navigate_to(win, items[1])
         return
       end
 
-      opts.diagnostic_items = items
+      opts.items = items
       view = View.create(opts)
     end, opts)
   end

@@ -33,8 +33,13 @@ end
 
 ---@param view TroubleView
 function renderer.render(view, opts)
-  opts = opts or {diagnostic_items = {}}
-  local items = opts.diagnostic_items
+  opts = opts or { items = {} }
+  local items = opts.items
+
+  if items == nil then
+    util.error("item list is nil")
+    return
+  end
 
   if #items == 0 then
     util.warn("no results")
