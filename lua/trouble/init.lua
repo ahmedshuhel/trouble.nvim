@@ -67,32 +67,33 @@ function Trouble.open(...)
   end
   opts.focus = true
 
-  if is_open() then
-    Trouble.refresh(opts)
-  else
-    local win = vim.api.nvim_get_current_win()
-    local buf = vim.api.nvim_win_get_buf(win)
+  local win = vim.api.nvim_get_current_win()
+  local buf = vim.api.nvim_win_get_buf(win)
 
-    providers.get(win, buf, function(items)
-      if items == nil then
-        util.error("lsp sent nill results")
-        return
-      end
+  providers.get(win, buf, function(items)
+    if items == nil then
+      util.error("lsp sent nill results")
+      return
+    end
 
-      if #items == 0 then
-        util.warn("no results")
-        return
-      end
+    if #items == 0 then
+      util.warn("no results")
+      return
+    end
 
-      if opts.mode == 'lsp_definitions' and #items == 1 then
-        navigate_to(win, items[1])
-        return
-      end
+    if opts.mode == 'lsp_definitions' and #items == 1 then
+      navigate_to(win, items[1])
+      return
+    end
 
-      opts.items = items
+    opts.items = items
+
+    if is_open() then
+      Trouble.refresh(opts)
+    else
       view = View.create(opts)
-    end, opts)
-  end
+    end
+  end, opts)
 end
 
 
