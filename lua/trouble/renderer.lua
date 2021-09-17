@@ -72,6 +72,12 @@ function renderer.render(view, opts)
     if opts.focus then
       view:focus()
     end
+
+    if opts.mode == 'lsp_definitions' and count == 1 then
+      view:jump()
+      view:close()
+    end
+
   end, config.options)
 end
 
