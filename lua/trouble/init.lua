@@ -1,3 +1,4 @@
+local providers = require("trouble.providers")
 local View = require("trouble.view")
 local config = require("trouble.config")
 local colors = require("trouble.colors")
@@ -11,6 +12,15 @@ local view
 
 local function is_open()
   return view and view:is_valid()
+end
+
+local function navigate_to(win, item)
+  if vim.api.nvim_buf_get_option(item.bufnr, "buflisted") == false then
+    vim.cmd("edit #" .. item.bufnr)
+  else
+    vim.cmd("buffer " .. item.bufnr)
+  end
+  vim.api.nvim_win_set_cursor(win, { item.start.line + 1, item.start.character })
 end
 
 function Trouble.setup(options)
@@ -60,9 +70,28 @@ function Trouble.open(...)
   if is_open() then
     Trouble.refresh(opts)
   else
-    view = View.create(opts)
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_win_get_buf(win)
+
+    providers.get(win, buf, function(items)
+      -- print(vim.inspect(items))
+      if #items == 0 then
+        util.warn("no results")
+        return
+      end
+
+      if opts.mode == 'lsp_definitions' and #items == 1 then
+        --print(vim.inspect(items))
+        navigate_to(win, items[1])
+        return
+      end
+
+      opts.diagnostic_items = items
+      view = View.create(opts)
+    end, opts)
   end
 end
+
 
 function Trouble.toggle(...)
   local opts = get_opts(...)

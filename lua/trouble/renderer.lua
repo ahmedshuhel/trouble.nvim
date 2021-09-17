@@ -30,55 +30,50 @@ local function update_signs()
   end
 end
 
+
 ---@param view TroubleView
 function renderer.render(view, opts)
-  opts = opts or {}
-  local buf = vim.api.nvim_win_get_buf(view.parent)
-  providers.get(view.parent, buf, function(items)
-    if #items == 0 then
-      util.warn("no results")
-    end
-    local grouped = providers.group(items)
-    local count = util.count(grouped)
+  opts = opts or {diagnostic_items = {}}
+  local items = opts.diagnostic_items
 
-    -- check for auto close
-    if opts.auto and config.options.auto_close then
-      if count == 0 then
-        view:close()
-        return
-      end
-    end
+  if #items == 0 then
+    util.warn("no results")
+  end
 
-    -- Update lsp signs
-    update_signs()
+  local grouped = providers.group(items)
+  local count = util.count(grouped)
 
-    local text = Text:new()
-    view.items = {}
-
-    text:nl()
-
-    -- render file groups
-    for filename, group_items in pairs(grouped) do
-      if opts.open_folds then
-        folds.open(filename)
-      end
-      if opts.close_folds then
-        folds.close(filename)
-      end
-      renderer.render_file(view, text, filename, group_items)
-    end
-
-    view:render(text)
-    if opts.focus then
-      view:focus()
-    end
-
-    if opts.mode == 'lsp_definitions' and count == 1 then
-      view:jump()
+  -- check for auto close
+  if opts.auto and config.options.auto_close then
+    if count == 0 then
       view:close()
+      return
     end
+  end
 
-  end, config.options)
+  -- Update lsp signs
+  update_signs()
+
+  local text = Text:new()
+  view.items = {}
+
+  text:nl()
+
+  -- render file groups
+  for filename, group_items in pairs(grouped) do
+    if opts.open_folds then
+      folds.open(filename)
+    end
+    if opts.close_folds then
+      folds.close(filename)
+    end
+    renderer.render_file(view, text, filename, group_items)
+  end
+
+  view:render(text)
+  if opts.focus then
+    view:focus()
+  end
 end
 
 ---@param view View
