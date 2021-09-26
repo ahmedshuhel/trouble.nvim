@@ -24,6 +24,7 @@ local function navigate_to(win, item)
 end
 
 function Trouble.setup(options)
+  vim.g.trouble_loading = false
   config.setup(options)
   colors.setup()
 end
@@ -60,6 +61,11 @@ local function get_opts(...)
   return opts
 end
 
+local function busy(value)
+  vim.g.trouble_loading = value
+  vim.cmd("redraw!")
+end
+
 function Trouble.open(...)
   local opts = get_opts(...)
   if opts.mode and (opts.mode ~= config.options.mode) then
@@ -70,19 +76,25 @@ function Trouble.open(...)
   local win = vim.api.nvim_get_current_win()
   local buf = vim.api.nvim_win_get_buf(win)
 
+  busy(true)
+
   providers.get(win, buf, function(items)
     if items == nil then
       util.error("lsp sent nill results")
+
+      busy(false)
       return
     end
 
     if #items == 0 then
       util.warn("no results")
+      busy(false)
       return
     end
 
     if opts.mode == 'lsp_definitions' and #items == 1 then
       navigate_to(win, items[1])
+      busy(false)
       return
     end
 
@@ -93,6 +105,8 @@ function Trouble.open(...)
     else
       view = View.create(opts)
     end
+
+    busy(false)
   end, opts)
 end
 
